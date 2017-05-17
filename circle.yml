@@ -21,7 +21,9 @@ dependencies:
     - npm run install:yarn
 test:
   override:
-    - echo "N/A"
+    - docker pull node:6.10-slim
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD -e $DOCKER_EMAIL
+    - node ./scripts/docker/buildAndPush.js
 deployment:
   release:
     tag: /v\d+\.\d+\.\d+.*/
@@ -30,10 +32,3 @@ deployment:
       - docker pull node:6.10-slim
       - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD -e $DOCKER_EMAIL
       - BRANCH=$CIRCLE_BRANCH npm run publish -- $CIRCLE_TAG
-  release:
-    tag: /hot.*/
-    owner: TrueCar
-    commands:
-      - docker pull node:6.10-slim
-      - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD -e $DOCKER_EMAIL
-      - node ./scripts/docker/buildAndPush.js
