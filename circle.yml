@@ -12,13 +12,8 @@ dependencies:
   pre:
     - echo $CI_PULL_REQUEST
     - echo $CIRCLE_BRANCH
-    # Installing Yarn
-    - curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-    - echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-    - sudo apt-get update && sudo apt-get install yarn
-    - echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
   override:
-    - npm run install:yarn
+    - echo "NOOP"
 test:
   override:
     - docker pull node:6.10-slim
