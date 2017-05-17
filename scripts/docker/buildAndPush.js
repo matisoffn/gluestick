@@ -1,1 +1,1 @@
-require('./docker/create-base-image')();
+require('./create-base-image')();
