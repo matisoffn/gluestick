@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 const execSync = require('child_process').execSync;
 
 module.exports = (command, cwd = process.cwd(), customEnv = {}) => {
@@ -12,9 +14,5 @@ module.exports = (command, cwd = process.cwd(), customEnv = {}) => {
   console.log(' * in directory:');
   console.log(` *   ${cwd}`);
   console.log(`/${'*'.repeat(80)}/`);
-  return execSync(command, {
-    cwd,
-    stdio: 'inherit',
-    env: Object.assign({}, process.env, customEnv),
-  });
+  return execSync(command, { cwd, stdio: 'inherit', env: Object.assign({}, process.env, customEnv) });
 };
