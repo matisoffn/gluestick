@@ -1,31 +1,30 @@
+/* @flow */
+
+// @TODO tests
+
 const path = require('path');
 const fs = require('fs');
 const mkdir = require('mkdirp');
 const spawn = require('cross-spawn');
 const commander = require('commander');
 const glob = require('glob');
-const chalk = require('chalk');
 const generate = require('gluestick-generators').default;
 const fetch = require('node-fetch');
 const rimraf = require('rimraf');
 
-const ensureDevelopmentPathIsValid = (pathToGluestickRepo, exitWithError) => {
+const ensureDevelopmentPathIsValid = (pathToGluestickRepo, logger) => {
   let gluestickPackage = {};
   try {
     gluestickPackage = require(path.join(pathToGluestickRepo, 'package.json'));
   } catch (error) {
-    exitWithError(
-      `Development GlueStick path ${pathToGluestickRepo} is not valid`,
-    );
+    logger.fatal(`Development GlueStick path ${pathToGluestickRepo} is not valid`);
   }
   if (gluestickPackage.name !== 'gluestick-packages') {
-    exitWithError(
-      `${pathToGluestickRepo} is not a path to GlueStick`,
-    );
+    logger.fatal(`${pathToGluestickRepo} is not a path to GlueStick`);
   }
 };
 
-const getDevelopmentDependencies = ({ dev }, pathToGluestickPackages) => {
+const getDevelopmentDependencies = ({ dev }: { dev: string }, pathToGluestickPackages) => {
   return glob.sync('*', { cwd: pathToGluestickPackages })
     .filter(name => name !== 'gluestick-cli')
     .reduce((acc, key) => {
@@ -33,9 +32,16 @@ const getDevelopmentDependencies = ({ dev }, pathToGluestickPackages) => {
     }, {});
 };
 
-module.exports = (appName, options, exitWithError) => {
-  const preset = options.preset || 'default';
-  const api = 'http://registry.npmjs.org';
+type Options = {
+  preset?: string;
+  dev?: string;
+  skipMain: boolean;
+  npm: boolean;
+};
+
+module.exports = (appName: string, options: Options, logger: Function) => {
+  const preset: string = options.preset || 'default';
+  const api: string = 'http://registry.npmjs.org';
   Promise.all([
     fetch(`${api}/gluestick`),
     fetch(`${api}/gluestick-preset-${preset}`),
@@ -48,17 +54,17 @@ module.exports = (appName, options, exitWithError) => {
       };
 
       if (options.dev) {
+        // $FlowIgnore `options.dev` is explicitly check for not being null
         const pathToGluestickRepo = path.join(process.cwd(), appName, '..', options.dev);
         const pathToGluestickPackages = path.join(pathToGluestickRepo, 'packages');
-        ensureDevelopmentPathIsValid(pathToGluestickRepo, exitWithError);
+        ensureDevelopmentPathIsValid(pathToGluestickRepo, logger);
+        // $FlowIgnore `options.dev` is explicitly check for not being null
         gluestickDependencies = getDevelopmentDependencies(options, pathToGluestickPackages);
       }
 
       const pathToApp = path.join(process.cwd(), appName);
       if (fs.existsSync(pathToApp)) {
-        exitWithError(
-          `Directory ${pathToApp} already exists`,
-        );
+        logger.fatal(`Directory ${pathToApp} already exists`);
       }
 
       mkdir.sync(path.join(process.cwd(), appName));
@@ -86,9 +92,7 @@ module.exports = (appName, options, exitWithError) => {
 
         const isYarnAvailable = !spawn.sync('yarn', ['-V']).error;
         if (!options.npm && !isYarnAvailable) {
-          console.log(
-            chalk.yellow.bgBlack('You are installing dependencies using npm, consider using yarn.'),
-          );
+          logger.warn('You are installing dependencies using npm, consider using yarn.');
         }
 
         spawn.sync(
@@ -122,10 +126,11 @@ module.exports = (appName, options, exitWithError) => {
       }
     })
     .catch(error => {
-      console.error(chalk.red(error.message));
-      console.error('This error may occur due to the following reasons:');
-      console.error(` -> Cannot connect or make request to '${api}'`);
-      console.error(' -> Specified preset was not found');
-      process.exit(1);
+      logger.error(error.message);
+      logger.fatal(
+        'This error may occur due to the following reasons:'
+        + ` -> Cannot connect or make request to '${api}'`
+        + ' -> Specified preset was not found',
+      );
     });
 };

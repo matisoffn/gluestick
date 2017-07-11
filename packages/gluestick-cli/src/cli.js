@@ -1,7 +1,9 @@
+/* @flow */
+
 const path = require('path');
 const commander = require('commander');
 const spawn = require('cross-spawn');
-const chalk = require('chalk');
+const { getLogger, loggingSchema: { success } } = require('gluestick-utils');
 
 const newApp = require('./new');
 const reinstallDev = require('./reinstallDev');
@@ -9,16 +11,16 @@ const watch = require('./watch');
 const resetHard = require('./reset');
 
 const version = require(path.join(__dirname, '../package.json')).version;
+const logger = getLogger();
 
 const exitWithError = message => {
-  console.error(chalk.red(`ERROR: ${message}`));
-  process.exit(1);
+  logger.fatal(message);
 };
 
 commander.version(version);
 
 if (['-v', '-V', '--version'].indexOf(process.argv[2]) >= 0) {
-  console.log(`${chalk.green('gluestick-cli')}: ${version} (global binary)`);
+  console.log(`${success('gluestick-cli')}: ${version} (global binary)`);
   let localVersion = 'n/a';
   let localInstalledVersion = '';
   try {
@@ -34,7 +36,7 @@ if (['-v', '-V', '--version'].indexOf(process.argv[2]) >= 0) {
     // noop
   }
   console.log(
-    `${chalk.green('gluestick')}: ${localVersion}${
+    `${success('gluestick')}: ${localVersion}${
       localVersion !== localInstalledVersion && localInstalledVersion.length
         ? `, installed ${localInstalledVersion}`
         : ''
@@ -56,7 +58,7 @@ commander
   .option('-s, --skip-main', 'gluestick will not generate main app')
   .option('-n, --npm', 'use npm instead of yarn')
   .action((appName, options) => {
-    newApp(appName, options, exitWithError);
+    newApp(appName, options, logger);
   });
 
 commander
@@ -89,8 +91,7 @@ commander
       { stdio: 'inherit' },
     );
     childProcess.on('error', (error) => {
-      console.error(chalk.red(error));
-      process.exit(1);
+      logger.fatal(error);
     });
     childProcess.on('exit', (code) => {
       if (code !== 0) {
