@@ -19,7 +19,8 @@ const spawnWithErrorHandling = (...args) => {
 // Set dist-tag
 let tagname = 'latest'; // stable
 
-if (version.includes('-')) { // pre-release
+if (version.includes('-')) {
+  // pre-release
   const regex = version.match(/-(.+)\./);
   if (regex) {
     tagname = regex[1]; // parse type of pre-release
@@ -29,21 +30,25 @@ if (version.includes('-')) { // pre-release
 }
 
 // Publish packages to npm registry
-spawnWithErrorHandling('npm', [
-  'run',
-  'lerna',
-  'publish',
-  '--',
-  '--skip-git',
-  '--repo-version',
-  version,
-  '--npm-tag',
-  tagname,
-  '--yes',
-  '--force-publish=*',
-  '--exact',
-  ...process.argv.slice(3),
-], { stdio: 'inherit' });
+spawnWithErrorHandling(
+  'npm',
+  [
+    'run',
+    'lerna',
+    'publish',
+    '--',
+    '--skip-git',
+    '--repo-version',
+    version,
+    '--npm-tag',
+    tagname,
+    '--yes',
+    '--force-publish=*',
+    '--exact',
+    ...process.argv.slice(3),
+  ],
+  { stdio: 'inherit' },
+);
 
 console.log('Pushing commit...');
 exec('git checkout staging');

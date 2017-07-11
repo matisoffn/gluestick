@@ -14,20 +14,45 @@ const {
 const { getGeneratorPath } = require('../getDataFromPreset');
 
 const templateGitignore = require('../templates/gitignore')(createTemplate);
-const templateDockerignore = require('../templates/dockerignore')(createTemplate);
+const templateDockerignore = require('../templates/dockerignore')(
+  createTemplate,
+);
 const tag = require('../../../package.json').version;
-const templateDockerfile = require('../templates/Dockerfile')(createTemplate, tag);
-const templateEntryWrapper = require('../templates/EntryWrapper')(createTemplate);
+const templateDockerfile = require('../templates/Dockerfile')(
+  createTemplate,
+  tag,
+);
+const templateEntryWrapper = require('../templates/EntryWrapper')(
+  createTemplate,
+);
 const templateApp = require('../templates/application')(createTemplate);
-const templateAppServer = require('../templates/application.server')(createTemplate);
-const templateInitBrowser = require('../templates/init.browser')(createTemplate);
-const templateReduxMiddleware = require('../templates/redux-middleware')(createTemplate);
-const templateWebpackAdditions = require('../templates/webpack-additions')(createTemplate);
-const templateGluestickPlugins = require('../templates/gluestick.plugins')(createTemplate);
-const templateGluestickHooks = require('../templates/gluestick.hooks')(createTemplate);
-const templateGluestickConfig = require('../templates/gluestick.config')(createTemplate);
-const templateWebpackHooks = require('../templates/webpack.hooks')(createTemplate);
-const templateCachingServer = require('../templates/caching.server')(createTemplate);
+const templateAppServer = require('../templates/application.server')(
+  createTemplate,
+);
+const templateInitBrowser = require('../templates/init.browser')(
+  createTemplate,
+);
+const templateReduxMiddleware = require('../templates/redux-middleware')(
+  createTemplate,
+);
+const templateWebpackAdditions = require('../templates/webpack-additions')(
+  createTemplate,
+);
+const templateGluestickPlugins = require('../templates/gluestick.plugins')(
+  createTemplate,
+);
+const templateGluestickHooks = require('../templates/gluestick.hooks')(
+  createTemplate,
+);
+const templateGluestickConfig = require('../templates/gluestick.config')(
+  createTemplate,
+);
+const templateWebpackHooks = require('../templates/webpack.hooks')(
+  createTemplate,
+);
+const templateCachingServer = require('../templates/caching.server')(
+  createTemplate,
+);
 
 module.exports = (options: GeneratorOptions) => {
   const presetNewGenerator = require(getGeneratorPath('new'))({
@@ -115,9 +140,6 @@ module.exports = (options: GeneratorOptions) => {
 
   return {
     ...presetNewGenerator,
-    entries: [
-      ...presetNewGenerator.entries,
-      ...entries,
-    ],
+    entries: [...presetNewGenerator.entries, ...entries],
   };
 };

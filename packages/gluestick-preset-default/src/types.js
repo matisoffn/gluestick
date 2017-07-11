@@ -4,17 +4,17 @@ export type CreateTemplate = (
 ) => (args: Object) => string;
 
 export type GeneratorOptions = {
-  [key: string]: any;
+  [key: string]: any,
 };
 
 export type GeneratorUtils = {
-  convertToCamelCase: Function;
-  convertToKebabCase: Function;
-  createTemplate: Function;
+  convertToCamelCase: Function,
+  convertToKebabCase: Function,
+  createTemplate: Function,
 };
 
 export type PredefinedGeneratorOptions = {
-  name: string;
-  dir?: string;
-  entryPoint: string;
+  name: string,
+  dir?: string,
+  entryPoint: string,
 };

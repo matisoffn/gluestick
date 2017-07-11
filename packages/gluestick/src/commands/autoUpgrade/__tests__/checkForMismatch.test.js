@@ -15,23 +15,9 @@ jest.mock('gluestick-generators', () => ({
 }));
 
 jest.mock('fs', () => ({
-  readFileSync: jest.fn(() => JSON.stringify({
-    version: require('../../../../package.json').version,
-    gsProjectDependencies: {
-      dependencies: {
-        depA: '2.0.0',
-        depB: '1.0.0',
-      },
-      devDependencies: {
-        depC: '1.0.0',
-      },
-    },
-  })),
-}));
-
-jest.mock('node-fetch', () => () => Promise.resolve({ json: () => Promise.resolve({
-  versions: {
-    [require('../../../../package.json').version]: {
+  readFileSync: jest.fn(() =>
+    JSON.stringify({
+      version: require('../../../../package.json').version,
       gsProjectDependencies: {
         dependencies: {
           depA: '2.0.0',
@@ -41,9 +27,30 @@ jest.mock('node-fetch', () => () => Promise.resolve({ json: () => Promise.resolv
           depC: '1.0.0',
         },
       },
-    },
-  },
-}) }));
+    }),
+  ),
+}));
+
+jest.mock('node-fetch', () => () =>
+  Promise.resolve({
+    json: () =>
+      Promise.resolve({
+        versions: {
+          [require('../../../../package.json').version]: {
+            gsProjectDependencies: {
+              dependencies: {
+                depA: '2.0.0',
+                depB: '1.0.0',
+              },
+              devDependencies: {
+                depC: '1.0.0',
+              },
+            },
+          },
+        },
+      }),
+  }),
+);
 
 const fs = require('fs');
 const utils = require('../utils');
@@ -87,7 +94,9 @@ describe('autoUpgrade/checkForMismatch', () => {
   });
 
   it('should detect mismatched modules from api request', () => {
-    fs.readFileSync.mockImplementationOnce(() => { throw new Error(); });
+    fs.readFileSync.mockImplementationOnce(() => {
+      throw new Error();
+    });
     // $FlowIgnore
     return checkForMismatch({
       dependencies: {

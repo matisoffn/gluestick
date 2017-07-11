@@ -16,7 +16,8 @@ const compileGlueStickConfig = require('../config/compileGlueStickConfig');
 const getCompileWebpackConfig = () => require('../config/compileWebpackConfig');
 
 // Get options object from command arguments
-const getOptions = commandArguments => commandArguments[commandArguments.length - 1];
+const getOptions = commandArguments =>
+  commandArguments[commandArguments.length - 1];
 
 // Get logger instance
 const getLogger = (level: string = 'info'): Logger => loggerFactory(level);
@@ -33,9 +34,13 @@ const isGluestickProject = (packagePath: string = process.cwd()): boolean => {
 
 // Get pluging array
 const getPlugins = (
-  logger: Logger, pluginsConfigPath = path.join(process.cwd(), 'src/gluestick.plugins.js'),
+  logger: Logger,
+  pluginsConfigPath = path.join(process.cwd(), 'src/gluestick.plugins.js'),
 ): ConfigPlugin[] => {
-  const plugins: ConfigPlugin[] = prepareConfigPlugins(logger, pluginsConfigPath);
+  const plugins: ConfigPlugin[] = prepareConfigPlugins(
+    logger,
+    pluginsConfigPath,
+  );
   // $FlowIgnore pass additional data as a property
   plugins.pluginsConfigPath = pluginsConfigPath;
   return plugins;
@@ -43,7 +48,9 @@ const getPlugins = (
 
 // Compile gluestick config
 const getGluestickConfig = (
-  logger: Logger, plugins: ConfigPlugin[], options: { [key: string]: any } = {},
+  logger: Logger,
+  plugins: ConfigPlugin[],
+  options: { [key: string]: any } = {},
 ): GSConfig => {
   const config: GSConfig = compileGlueStickConfig(logger, plugins, options);
   // $FlowIgnore get additional data from a property
@@ -73,7 +80,10 @@ const getContextConfig = (logger: Logger, webpackOptions = {}): Config => {
   return {
     GSConfig: gluestickConfig,
     webpackConfig: getWebpackConfig(
-      logger, plugins, gluestickConfig, webpackOptions,
+      logger,
+      plugins,
+      gluestickConfig,
+      webpackOptions,
     ),
   };
 };

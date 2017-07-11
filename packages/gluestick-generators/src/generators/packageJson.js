@@ -4,7 +4,9 @@ const createTemplate = module.parent.createTemplate;
 
 const dependenciesToJson = dependencies => (acc, key, index, array) => {
   return acc.concat(
-    `"${key}": "${dependencies[key]}"${index === array.length - 1 ? '' : ',\n    '}`,
+    `"${key}": "${dependencies[key]}"${index === array.length - 1
+      ? ''
+      : ',\n    '}`,
   );
 };
 
@@ -22,10 +24,18 @@ const templatePackage = createTemplate`
     "lint": "eslint src"
   },
   "dependencies": {
-    ${args => Object.keys(args.dependencies).reduce(dependenciesToJson(args.dependencies), '')}
+    ${args =>
+      Object.keys(args.dependencies).reduce(
+        dependenciesToJson(args.dependencies),
+        '',
+      )}
   },
   "devDependencies": {
-    ${args => Object.keys(args.devDependencies).reduce(dependenciesToJson(args.devDependencies), '')}
+    ${args =>
+      Object.keys(args.devDependencies).reduce(
+        dependenciesToJson(args.devDependencies),
+        '',
+      )}
   },
   "author": "",
   "license": "ISC"
@@ -38,7 +48,12 @@ const reverseGluestickDependencies = dependencies => {
   }, {});
 };
 
-module.exports = ({ appName, preset, gluestickDependencies, presetDependencies }) => ({
+module.exports = ({
+  appName,
+  preset,
+  gluestickDependencies,
+  presetDependencies,
+}) => ({
   entries: [
     {
       path: '/',

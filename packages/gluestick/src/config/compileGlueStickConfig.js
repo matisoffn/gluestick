@@ -8,10 +8,13 @@ const hooksHelper = require('../renderer/helpers/hooks');
 const { requireModule } = require('../utils');
 
 type Options = {
-  hideMissingConfigWarning: boolean;
+  hideMissingConfigWarning: boolean,
 };
 
-const getConfigHook = (logger: Logger, { hideMissingConfigWarning }: Options = {}): Function => {
+const getConfigHook = (
+  logger: Logger,
+  { hideMissingConfigWarning }: Options = {},
+): Function => {
   try {
     const configHooks: Function = requireModule(
       path.join(process.cwd(), defaultConfig.gluestickConfigPath),
@@ -19,14 +22,18 @@ const getConfigHook = (logger: Logger, { hideMissingConfigWarning }: Options = {
     return config => hooksHelper.call(configHooks, config);
   } catch (e) {
     if (!hideMissingConfigWarning) {
-      logger.warn('GlueStick config hook was not found. Consider running `gluestick auto-upgrade`.');
+      logger.warn(
+        'GlueStick config hook was not found. Consider running `gluestick auto-upgrade`.',
+      );
     }
     return config => config;
   }
 };
 
 module.exports = (
-  logger: Logger, plugins: ConfigPlugin[], { hideMissingConfigWarning }: Options = {},
+  logger: Logger,
+  plugins: ConfigPlugin[],
+  { hideMissingConfigWarning }: Options = {},
 ): GSConfig => {
   if (!Array.isArray(plugins)) {
     throw new Error('Invalid plugins argument');
@@ -34,11 +41,20 @@ module.exports = (
 
   return getConfigHook(logger, { hideMissingConfigWarning })(
     plugins
-      .filter((plugin: ConfigPlugin): boolean => !!plugin.postOverwrites.gluestickConfig)
+      .filter(
+        (plugin: ConfigPlugin): boolean =>
+          !!plugin.postOverwrites.gluestickConfig,
+      )
       // $FlowIgnore filter above ensures `gluestickConfig` won't be undefinfed/null
-      .map((plugin: ConfigPlugin): Function => plugin.postOverwrites.gluestickConfig)
-      .reduce((prev: GSConfig, curr: (config: GSConfig) => GSConfig): GSConfig => {
-        return curr(clone(prev));
-      }, defaultConfig),
+      .map(
+        (plugin: ConfigPlugin): Function =>
+          plugin.postOverwrites.gluestickConfig,
+      )
+      .reduce(
+        (prev: GSConfig, curr: (config: GSConfig) => GSConfig): GSConfig => {
+          return curr(clone(prev));
+        },
+        defaultConfig,
+      ),
   );
 };

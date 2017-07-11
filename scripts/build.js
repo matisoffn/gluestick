@@ -17,11 +17,18 @@ if (process.argv.length < 3) {
 
 const getDestinationPath = (packageName, filename) => {
   const pathToPackage = path.join(process.cwd(), 'packages', packageName);
-  return path.join(pathToPackage, filename.replace(pathToPackage, '').replace('src', 'build'));
+  return path.join(
+    pathToPackage,
+    filename.replace(pathToPackage, '').replace('src', 'build'),
+  );
 };
 
-packageNames.forEach((packageName) => {
-  const babelrc = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'packages', packageName, '.babelrc')));
+packageNames.forEach(packageName => {
+  const babelrc = JSON.parse(
+    fs.readFileSync(
+      path.join(process.cwd(), 'packages', packageName, '.babelrc'),
+    ),
+  );
   const options = Object.assign(babelrc, {
     sourceMaps: 'inline',
   });
@@ -29,30 +36,54 @@ packageNames.forEach((packageName) => {
   rimraf.sync(path.join(process.cwd(), 'packages', packageName, 'build'));
 
   const globCommonOpts = {
-    ignore: [
-      '**/__tests__/**/*',
-      '**/__mocks__/**/*',
-    ],
+    ignore: ['**/__tests__/**/*', '**/__mocks__/**/*'],
   };
-  glob.sync(`${path.join(process.cwd(), 'packages', packageName)}/src/**/*.js`, globCommonOpts).forEach((filename) => {
-    const outputFilename = getDestinationPath(packageName, filename);
-    console.log(`${filename.replace(process.cwd(), '')} -> ${outputFilename.replace(process.cwd(), '')}`);
-    const { code } = babel.transformFileSync(filename, options);
-    mkdir.sync(path.dirname(outputFilename));
-    fs.writeFileSync(outputFilename, code, 'utf-8');
-  });
+  glob
+    .sync(
+      `${path.join(process.cwd(), 'packages', packageName)}/src/**/*.js`,
+      globCommonOpts,
+    )
+    .forEach(filename => {
+      const outputFilename = getDestinationPath(packageName, filename);
+      console.log(
+        `${filename.replace(process.cwd(), '')} -> ${outputFilename.replace(
+          process.cwd(),
+          '',
+        )}`,
+      );
+      const { code } = babel.transformFileSync(filename, options);
+      mkdir.sync(path.dirname(outputFilename));
+      fs.writeFileSync(outputFilename, code, 'utf-8');
+    });
 
-  glob.sync(`${path.join(process.cwd(), 'packages', packageName)}/src/**/*.{html,hbs}`, globCommonOpts).forEach((filename) => {
-    const outputFilename = getDestinationPath(packageName, filename);
-    console.log(`${filename.replace(process.cwd(), '')} -> ${outputFilename.replace(process.cwd(), '')}`);
-    fs.createReadStream(filename).pipe(fs.createWriteStream(filename.replace('src', 'build')))
-      .on('error', error => console.error(error));
-  });
+  glob
+    .sync(
+      `${path.join(
+        process.cwd(),
+        'packages',
+        packageName,
+      )}/src/**/*.{html,hbs}`,
+      globCommonOpts,
+    )
+    .forEach(filename => {
+      const outputFilename = getDestinationPath(packageName, filename);
+      console.log(
+        `${filename.replace(process.cwd(), '')} -> ${outputFilename.replace(
+          process.cwd(),
+          '',
+        )}`,
+      );
+      fs
+        .createReadStream(filename)
+        .pipe(fs.createWriteStream(filename.replace('src', 'build')))
+        .on('error', error => console.error(error));
+    });
 
   if (packageName === 'gluestick-generators') {
-    const command = './node_modules/.bin/flow-copy-source -v -i \'**/__tests__/**\' '
-      + `./packages/${packageName}/src `
-      + `./packages/${packageName}/build`;
+    const command =
+      "./node_modules/.bin/flow-copy-source -v -i '**/__tests__/**' " +
+      `./packages/${packageName}/src ` +
+      `./packages/${packageName}/build`;
     execSync(command);
   }
 });

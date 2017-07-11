@@ -1,6 +1,11 @@
 const { spawn } = require('child_process');
 
-module.exports = (command, customCwd = process.cwd(), customEnv = {}, stdio = 'inherit') => {
+module.exports = (
+  command,
+  customCwd = process.cwd(),
+  customEnv = {},
+  stdio = 'inherit',
+) => {
   const bin = command.split(' ')[0];
   const args = command.split(' ').slice(1);
   return new Promise((resolve, reject) => {
@@ -33,7 +38,7 @@ module.exports = (command, customCwd = process.cwd(), customEnv = {}, stdio = 'i
       });
     }
 
-    childProcess.on('exit', (code) => {
+    childProcess.on('exit', code => {
       if (code === 0) {
         resolve({ stdout, stderr });
       } else {
@@ -41,9 +46,8 @@ module.exports = (command, customCwd = process.cwd(), customEnv = {}, stdio = 'i
       }
     });
 
-    childProcess.on('error', (error) => {
+    childProcess.on('error', error => {
       reject(`${args.join(' ')} errored: ${error.toString()}`);
     });
   });
 };
-

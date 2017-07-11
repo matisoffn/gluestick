@@ -5,13 +5,14 @@ if (!process.env.CI_PULL_REQUEST) {
   process.exit(0);
 }
 
-if (!process.env.CIRCLE_BRANCH
-  || (
-    !process.env.CIRCLE_BRANCH.includes('next')
-    && !process.env.CIRCLE_BRANCH.startsWith('hotfix')
-  )
+if (
+  !process.env.CIRCLE_BRANCH ||
+  (!process.env.CIRCLE_BRANCH.includes('next') &&
+    !process.env.CIRCLE_BRANCH.startsWith('hotfix'))
 ) {
-  console.log('RUNNER: E2E test can only be run in PR from `next` branch or `hotfix` folder. Exiting');
+  console.log(
+    'RUNNER: E2E test can only be run in PR from `next` branch or `hotfix` folder. Exiting',
+  );
   process.exit(0);
 }
 
@@ -24,7 +25,7 @@ fetch(`http://api.github.com/repos/TrueCar/gluestick/pulls/${PR_NUMBER}`)
   .then(body => {
     const baseBranch = body.base.ref;
     if (baseBranch !== 'staging') {
-      console.log('RUNNER: base branch does not match \'staging\'. Exiting');
+      console.log("RUNNER: base branch does not match 'staging'. Exiting");
       process.exit(0);
     } else {
       console.log('RUNNER: running E2E tests...');

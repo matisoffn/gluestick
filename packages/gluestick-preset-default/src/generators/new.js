@@ -16,10 +16,11 @@ const templateNoMatchApp = require('../templates/NoMatchApp');
 const templateReducer = require('../templates/reducersIndex');
 const templateRoutes = require('../templates/routes');
 
-
 const { flowVersion, flowMapper } = require('../constants');
 
-module.exports = ({ createTemplate }: GeneratorUtils) => (options: PredefinedGeneratorOptions) => {
+module.exports = ({ createTemplate }: GeneratorUtils) => (
+  options: PredefinedGeneratorOptions,
+) => {
   const entries = [
     {
       path: '/',
@@ -175,6 +176,8 @@ module.exports = ({ createTemplate }: GeneratorUtils) => (options: PredefinedGen
     },
   ];
   return {
-    entries: options.skipMain ? entries.filter(o => !o.path.includes('apps/main')) : entries,
+    entries: options.skipMain
+      ? entries.filter(o => !o.path.includes('apps/main'))
+      : entries,
   };
 };

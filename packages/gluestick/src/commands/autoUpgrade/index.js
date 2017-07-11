@@ -6,16 +6,20 @@ const { execSync } = require('child_process');
 const autoUpgrade = require('./autoUpgrade');
 const { version, preset = 'default' } = require('../../../package.json');
 
-module.exports = async ({ getLogger, getGluestickConfig, getPlugins }: CommandAPI) => {
+module.exports = async ({
+  getLogger,
+  getGluestickConfig,
+  getPlugins,
+}: CommandAPI) => {
   const logger: Logger = getLogger();
 
   logger.clear();
   logger.printCommandInfo();
 
-
-  const gluestickDependency: string = require(
-    path.join(process.cwd(), 'package.json'),
-  ).dependencies.gluestick;
+  const gluestickDependency: string = require(path.join(
+    process.cwd(),
+    'package.json',
+  )).dependencies.gluestick;
   const isDev: boolean = !/\d+\.\d+\.\d+.*/.test(gluestickDependency);
 
   try {
@@ -35,11 +39,9 @@ module.exports = async ({ getLogger, getGluestickConfig, getPlugins }: CommandAP
     await autoUpgrade({
       logger,
       config: {
-        GSConfig: getGluestickConfig(
-          logger,
-          getPlugins(logger),
-          { hideMissingConfigWarning: true },
-        ),
+        GSConfig: getGluestickConfig(logger, getPlugins(logger), {
+          hideMissingConfigWarning: true,
+        }),
       },
     });
   } catch (error) {

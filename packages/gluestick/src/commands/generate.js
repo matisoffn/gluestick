@@ -5,17 +5,20 @@ import type { CommandAPI, Logger } from '../types';
 const {
   loggingScheme: { highlight },
   loggingUtils: { createArrowList },
- } = require('gluestick-utils');
+} = require('gluestick-utils');
 const generator = require('gluestick-generators').default;
 
 export type Options = {
-  entrypoint?: string;
-  app?: string;
-  functional?: boolean;
-  genOptions?: string;
-}
+  entrypoint?: string,
+  app?: string,
+  functional?: boolean,
+  genOptions?: string,
+};
 
-module.exports = ({ getLogger, getOptions }: CommandAPI, commandArguments: any[]) => {
+module.exports = (
+  { getLogger, getOptions }: CommandAPI,
+  commandArguments: any[],
+) => {
   const logger: Logger = getLogger();
 
   logger.clear();
@@ -31,10 +34,14 @@ module.exports = ({ getLogger, getOptions }: CommandAPI, commandArguments: any[]
   };
 
   const successMessageHandler = (
-    genName: string, entity: string, results: { written: string[]; modified: string[] },
+    genName: string,
+    entity: string,
+    results: { written: string[], modified: string[] },
   ) => {
     logger.success(
-      `${generatorName[0].toUpperCase()}${generatorName.slice(1)} ${highlight(entity)} created`,
+      `${generatorName[0].toUpperCase()}${generatorName.slice(1)} ${highlight(
+        entity,
+      )} created`,
     );
     if (results.written.length) {
       logger.info(`Files written:\n${createArrowList(results.written, 9)}`);
@@ -44,9 +51,13 @@ module.exports = ({ getLogger, getOptions }: CommandAPI, commandArguments: any[]
     }
   };
 
-  generator({
-    generatorName,
-    entityName,
-    options: filteredOptions,
-  }, logger, { successMessageHandler });
+  generator(
+    {
+      generatorName,
+      entityName,
+      options: filteredOptions,
+    },
+    logger,
+    { successMessageHandler },
+  );
 };
