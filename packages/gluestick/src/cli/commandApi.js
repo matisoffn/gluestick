@@ -9,7 +9,7 @@ import type {
 } from '../types.js';
 
 const path = require('path');
-const loggerFactory = require('./logger');
+const loggerFactory = require('gluestick-utils').getLogger;
 const prepareConfigPlugins = require('../plugins/prepareConfigPlugins');
 const compileGlueStickConfig = require('../config/compileGlueStickConfig');
 

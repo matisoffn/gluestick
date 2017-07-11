@@ -5,7 +5,7 @@ const newApp = require('../new');
 const spawn = require('cross-spawn');
 const generate = require('gluestick-generators').default;
 
-const { highlight, filename } = require('../../cli/colorScheme');
+const { highlight, filename } = require('gluestick-utils').loggingScheme;
 const packageJSON = require('../../../package.json');
 
 describe('cli: gluestick new', () => {

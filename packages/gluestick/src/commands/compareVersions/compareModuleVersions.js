@@ -4,8 +4,10 @@ import type { Logger } from '../../types.js';
 const semver = require('semver');
 const path = require('path');
 const chalk = require('chalk');
-const { createArrowList } = require('../../cli/helpers');
-const { highlight } = require('../../cli/colorScheme');
+const {
+  loggingScheme: { highlight },
+  loggingUtils: { createArrowList },
+ } = require('gluestick-utils');
 
 const packageName = '/package.json';
 

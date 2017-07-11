@@ -1,6 +1,6 @@
 /* @flow */
 
-import type { BaseLogger } from '../types';
+import type { ColorScheme } from '../types';
 
 const chalk = require('chalk');
 
@@ -25,12 +25,6 @@ const error = (...args) => process.env.GS_LOG_LIGHT
 const compilation = (...args) => process.env.GS_LOG_LIGHT
   ? chalk.bgMagenta.white(...args)
   : chalk.bgMagenta.black(...args);
-
-type ColorScheme = BaseLogger & {
-  filename: Function;
-  highlight: Function;
-  compilation: Function;
-}
 
 const colorScheme: ColorScheme = {
   success,

@@ -2,7 +2,7 @@
 import type { BaseLogger, Plugin } from '../types';
 
 const readPlugins = require('./readPlugins');
-const { createArrowList } = require('../cli/helpers');
+const { createArrowList } = require('gluestick-utils').loggingUtils;
 
 let runtimePluginsCache = [];
 

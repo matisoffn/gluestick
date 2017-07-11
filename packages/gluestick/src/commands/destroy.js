@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const inquirer = require('inquirer');
 
-const cliColorScheme = require('../cli/colorScheme');
+const cliColorScheme = require('gluestick-utils').loggingScheme;
 const {
   isValidEntryPoint,
   convertToCamelCaseWithPrefix,

@@ -1,7 +1,7 @@
 /* @flow */
 
 const loggerFactory = require('../logger');
-const colorScheme = require('../colorScheme');
+const colorScheme = require('../scheme');
 
 const logAndAssert = (message: string, shouldNotLog: string[], loggerInstance: Object) => {
   Object.keys(loggerFactory.levels).forEach((level: string): void => {

@@ -5,7 +5,7 @@ import type { Logger } from '../../types';
 const chalk = require('chalk');
 const webpack = require('webpack');
 const ProgressBar = require('progress');
-const { compilation } = require('../../cli/colorScheme');
+const { compilation } = require('gluestick-utils').loggingScheme;
 
 /**
  * Compilation states

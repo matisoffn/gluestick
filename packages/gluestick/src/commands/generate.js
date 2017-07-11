@@ -2,8 +2,10 @@
 
 import type { CommandAPI, Logger } from '../types';
 
-const { highlight } = require('../cli/colorScheme');
-const { createArrowList } = require('../cli/helpers');
+const {
+  loggingScheme: { highlight },
+  loggingUtils: { createArrowList },
+ } = require('gluestick-utils');
 const generator = require('gluestick-generators').default;
 
 export type Options = {

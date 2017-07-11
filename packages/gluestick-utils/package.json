@@ -1,0 +1,21 @@
+{
+  "name": "gluestick-utils",
+  "version": "1.13.0-beta.3",
+  "description": "@TODO",
+  "main": "build/index.js",
+  "homepage": "https://github.com/TrueCar/gluestick",
+  "bugs": "https://github.com/TrueCar/gluestick/issues",
+  "license": "MIT",
+  "keywords": [
+    "gluestick"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:TrueCar/gluestick.git"
+  },
+  "author": "Todd Williams <toddsurfs@icloud.com>",
+  "dependencies": {
+    "chalk": "1.1.3",
+    "clear": "0.0.1"
+  }
+}

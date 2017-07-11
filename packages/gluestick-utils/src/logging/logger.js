@@ -5,7 +5,7 @@ import type { Logger } from '../types';
 const util = require('util');
 const clear = require('clear');
 const readline = require('readline');
-const colorScheme = require('./colorScheme');
+const colorScheme = require('./scheme');
 
 const levels = {
   success: 20,

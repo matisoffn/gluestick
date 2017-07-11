@@ -2,7 +2,7 @@
 
 import type { ServerPlugin, Plugin, BaseLogger } from '../types';
 
-const { createArrowList } = require('../cli/helpers');
+const { createArrowList } = require('gluestick-utils').loggingUtils;
 
 type CopilationResults = {
   [key: string]: Function | Object;

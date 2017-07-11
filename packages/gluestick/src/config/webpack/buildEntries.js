@@ -5,7 +5,7 @@ import type { GSConfig, Logger } from '../../types';
 const glob = require('glob');
 const path = require('path');
 const fs = require('fs-extra');
-const { highlight } = require('../../cli/colorScheme');
+const { highlight } = require('gluestick-utils').loggingScheme;
 const generator = require('gluestick-generators').default;
 
 const buildEntries = (

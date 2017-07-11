@@ -5,8 +5,10 @@ import type { CommandAPI, Logger } from '../types';
 const spawn = require('cross-spawn');
 const generate = require('gluestick-generators').default;
 
-const { highlight, filename } = require('../cli/colorScheme');
-const { createArrowList } = require('../cli/helpers');
+const {
+  loggingScheme: { highlight, filename },
+  loggingUtils: { createArrowList },
+ } = require('gluestick-utils');
 const packageJSON = require('../../package.json');
 
 module.exports = (

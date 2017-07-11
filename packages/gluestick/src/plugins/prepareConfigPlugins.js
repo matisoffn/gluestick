@@ -4,7 +4,7 @@ import type { ConfigPlugin, Plugin, Logger } from '../types';
 
 const readPlugins = require('./readPlugins');
 const { requireModule, requireWithInterop, getDefaultExport } = require('../utils');
-const { createArrowList } = require('../cli/helpers');
+const { createArrowList } = require('gluestick-utils').loggingUtils;
 
 type CompilationResults = {
   preOverwrites: {
