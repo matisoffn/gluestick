@@ -5,10 +5,8 @@ const { join } = require('path');
 function getBabelRc(path) {
   const packageName = /packages\/([^/]+)\//.exec(path)[1];
   const pathToBabelRc = join(__dirname, 'packages', packageName, '.babelrc');
-  return Object.assign(
-    { retainLines: true },
-    JSON.parse(fs.readFileSync(pathToBabelRc)),
-  );
+  const babelRc = JSON.parse(fs.readFileSync(pathToBabelRc));
+  return Object.assign({ retainLines: true }, babelRc);
 }
 
 module.exports = {

@@ -45,9 +45,9 @@ module.exports = (
         (plugin: ConfigPlugin): boolean =>
           !!plugin.postOverwrites.gluestickConfig,
       )
-      // $FlowIgnore filter above ensures `gluestickConfig` won't be undefinfed/null
       .map(
         (plugin: ConfigPlugin): Function =>
+          // $FlowIgnore filter above ensures `gluestickConfig` won't be undefinfed/null
           plugin.postOverwrites.gluestickConfig,
       )
       .reduce(

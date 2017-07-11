@@ -74,8 +74,8 @@ module.exports = (appName: string, options: Options, logger: Function) => {
           'packages',
         );
         ensureDevelopmentPathIsValid(pathToGluestickRepo, logger);
-        // $FlowIgnore `options.dev` is explicitly check for not being null
         gluestickDependencies = getDevelopmentDependencies(
+          // $FlowIgnore `options.dev` is explicitly check for not being null
           options,
           pathToGluestickPackages,
         );
