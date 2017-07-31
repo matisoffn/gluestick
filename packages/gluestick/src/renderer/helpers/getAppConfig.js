@@ -50,10 +50,10 @@ module.exports = (
   });
 
   if (entryName) {
-    logger.debug(`Found entry for path ${entryName}`);
+    logger.debug(`Found app config for path ${entryName}`);
   }
   if (!entryName) {
-    throw new Error(`No matching entry definition found for '${req.url}'`);
+    throw new Error(`No matching app cofnig found for '${req.url}'`);
   }
 
   return {

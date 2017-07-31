@@ -1,30 +1,30 @@
 /* @flow */
 import type { Context, Request } from '../../types';
 
-const { match } = require('react-router');
-const { prepareRoutesWithTransitionHooks } = require('../../../shared');
+const { matchRoutes } = require('react-router-config');
+// const { prepareRoutesWithTransitionHooks } = require('../../../shared');
 
-module.exports = (
-  context: Context,
-  req: Request,
-  getRoutes: (store: Object, httpClient: Object) => Object,
-  store: Object,
-  httpClient: Object,
-) => {
+module.exports = (context: Context, req: Request, routes: any[]) => {
   return new Promise((resolve, reject) => {
-    const routes: Object = prepareRoutesWithTransitionHooks(
-      getRoutes(store, httpClient),
-    );
-    match(
-      { routes, location: req.url },
-      (error: any, redirectLocation: Object, renderProps: Object) => {
-        if (error) {
-          reject(error);
-          return;
-        }
+    // const routes: Object = prepareRoutesWithTransitionHooks(
+    //   getRoutes(store, httpClient),
+    // );
 
-        resolve({ redirectLocation, renderProps });
-      },
-    );
+    const branch = matchRoutes(routes, req.url);
+
+    if (!branch.length) {
+      reject(new Error(`No matching routes found for url ${req.url}`));
+    }
+
+    resolve(branch[branch.length - 1]);
+    //   (error: any, redirectLocation: Object, renderProps: Object) => {
+    //     if (error) {
+    //       reject(error);
+    //       return;
+    //     }
+
+    //     resolve({ redirectLocation, renderProps });
+    //   },
+    // );
   });
 };

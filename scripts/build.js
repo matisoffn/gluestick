@@ -24,6 +24,7 @@ packageNames.forEach((packageName) => {
   const babelrc = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'packages', packageName, '.babelrc')));
   const options = Object.assign(babelrc, {
     sourceMaps: 'inline',
+    retainLines: true,
   });
 
   rimraf.sync(path.join(process.cwd(), 'packages', packageName, 'build'));

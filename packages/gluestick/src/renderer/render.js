@@ -40,15 +40,9 @@ type AssetsCacheOpts = {
 module.exports = (
   context: Context,
   req: Request,
-  { EntryPoint, entryName, store, routes, httpClient }: EntryRequirements,
-  { renderProps, currentRoute }: { renderProps: Object, currentRoute: Object },
-  {
-    EntryWrapper,
-    BodyWrapper,
-    entryWrapperConfig,
-    envVariables,
-    entriesPlugins,
-  }: WrappersRequirements,
+  { AppEntryPoint, entryName, store, routes, httpClient }: EntryRequirements,
+  { currentRoute }: { renderProps: Object, currentRoute: Object },
+  { Body, BodyWrapper, entryWrapperConfig, envVariables }: WrappersRequirements,
   { assets, loadjsConfig, cacheManager }: AssetsCacheOpts,
   { renderMethod }: { renderMethod?: RenderMethod } = {},
 ): RenderOutput => {
@@ -59,43 +53,22 @@ module.exports = (
     loadjsConfig,
   );
   const isEmail = !!currentRoute.email;
-  const routerContext = <RouterContext {...renderProps} />;
-  const rootWrappers = entriesPlugins
-    .filter(plugin => plugin.meta.wrapper)
-    .map(({ plugin }) => plugin);
-  const entryWrapper = (
-    <EntryWrapper
-      store={store}
-      routerContext={routerContext}
+  // const routerContext = <RouterContext {...renderProps} />;
+  // const rootWrappers = entriesPlugins
+  //   .filter(plugin => plugin.meta.wrapper)
+  //   .map(({ plugin }) => plugin);
+
+  const renderResults: Object = getRenderer(isEmail, renderMethod)(
+    <Body
       config={entryWrapperConfig}
-      getRoutes={routes}
+      store={store}
+      routes={routes}
       httpClient={httpClient}
-      rootWrappers={rootWrappers}
       rootWrappersOptions={{
         userAgent: req.headers['user-agent'],
       }}
-    />
-  );
-
-  // grab the react generated body stuff. This includes the
-  // script tag that hooks up the client side react code.
-  const currentState: Object = store.getState();
-
-  const renderResults: Object = getRenderer(isEmail, renderMethod)(
-    entryWrapper,
+    />,
     styleTags,
-  );
-  const bodyWrapperContent: String = renderMethod
-    ? renderResults.body
-    : renderResults;
-  const bodyWrapper = (
-    <BodyWrapper
-      html={bodyWrapperContent}
-      initialState={currentState}
-      isEmail={isEmail}
-      envVariables={envVariables}
-      scriptTags={scriptTags}
-    />
   );
 
   // Grab the html from the project which is stored in the root
@@ -105,8 +78,16 @@ module.exports = (
   //
   // Bundle it all up into a string, add the doctype and deliver
   const rootElement = (
-    <EntryPoint
-      body={bodyWrapper}
+    <AppEntryPoint
+      body={
+        <BodyWrapper
+          html={renderMethod ? renderResults.body : renderResults}
+          initialState={store.getState()}
+          isEmail={isEmail}
+          envVariables={envVariables}
+          scriptTags={scriptTags}
+        />
+      }
       head={isEmail ? null : renderResults.head || styleTags}
       req={req}
     />

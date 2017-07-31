@@ -16,7 +16,7 @@ import type {
 } from '../types';
 
 const render = require('./render');
-const getRequirementsFromEntry = require('./helpers/getRequirementsFromEntry');
+const getAppConfig = require('./helpers/getAppConfig');
 const matchRoute = require('./helpers/matchRoute');
 const { getHttpClient, createStore, runBeforeRoutes } = require('../../shared');
 const { showHelpText, MISSING_404_TEXT } = require('./helpers/helpText');
@@ -47,7 +47,7 @@ module.exports = async (
   req: Request,
   res: Response,
   { entries, entriesConfig, entriesPlugins }: EntriesArgs,
-  { EntryWrapper, BodyWrapper }: { EntryWrapper: Object, BodyWrapper: Object },
+  { Body, BodyWrapper }: { Body: Object, BodyWrapper: Object },
   { assets, loadjsConfig }: { assets: Object, loadjsConfig: Object },
   options: Options = {
     envVariables: [],
@@ -74,7 +74,7 @@ module.exports = async (
       return Promise.resolve();
     }
 
-    const requirementsBeforeHooks: RenderRequirements = getRequirementsFromEntry(
+    const requirementsBeforeHooks: RenderRequirements = getAppConfig(
       { config, logger },
       req,
       entries,
@@ -111,50 +111,47 @@ module.exports = async (
       !!module.hot,
       reduxOptions.thunk,
     );
-
-    const {
-      redirectLocation,
-      renderProps,
-    }: { redirectLocation: Object, renderProps: Object } = await matchRoute(
+    const routes = requirements.routes(store, httpClient);
+    const { route, match }: { route: Object, match: Object } = await matchRoute(
       { config, logger },
       req,
-      requirements.routes,
+      routes,
       store,
       httpClient,
     );
-    const renderPropsAfterHooks: Object = hooksHelper(
-      hooks.postRenderProps,
-      renderProps,
-    );
-    if (redirectLocation) {
-      hooksHelper(hooks.preRedirect, redirectLocation);
-      res.redirect(
-        301,
-        `${redirectLocation.pathname}${redirectLocation.search}`,
-      );
-      return Promise.resolve();
-    }
+    // const renderPropsAfterHooks: Object = hooksHelper(
+    //   hooks.postRenderProps,
+    //   renderProps,
+    // );
+    // if (redirectLocation) {
+    //   hooksHelper(hooks.preRedirect, redirectLocation);
+    //   res.redirect(
+    //     301,
+    //     `${redirectLocation.pathname}${redirectLocation.search}`,
+    //   );
+    //   return Promise.resolve();
+    // }
 
-    if (!renderPropsAfterHooks) {
-      // This is only hit if there is no 404 handler in the react routes. A
-      // not found handler is included by default in new projects.
-      showHelpText(MISSING_404_TEXT, logger);
-      res.sendStatus(404);
-      return Promise.resolve();
-    }
+    // if (!renderPropsAfterHooks) {
+    //   // This is only hit if there is no 404 handler in the react routes. A
+    //   // not found handler is included by default in new projects.
+    //   showHelpText(MISSING_404_TEXT, logger);
+    //   res.sendStatus(404);
+    //   return Promise.resolve();
+    // }
 
-    await runBeforeRoutes(store, renderPropsAfterHooks, {
-      isServer: true,
-      request: req,
-    });
+    // await runBeforeRoutes(store, renderPropsAfterHooks, {
+    //   isServer: true,
+    //   request: req,
+    // });
 
-    const currentRouteBeforeHooks: Object =
-      renderPropsAfterHooks.routes[renderPropsAfterHooks.routes.length - 1];
-    const currentRoute: Object = hooksHelper(
-      hooks.postGetCurrentRoute,
-      currentRouteBeforeHooks,
-    );
-    setHeaders(res, currentRoute);
+    // const currentRouteBeforeHooks: Object =
+    //   renderPropsAfterHooks.routes[renderPropsAfterHooks.routes.length - 1];
+    // const currentRoute: Object = hooksHelper(
+    //   hooks.postGetCurrentRoute,
+    //   currentRouteBeforeHooks,
+    // );
+    // setHeaders(res, currentRoute);
 
     let renderMethod: RenderMethod;
     const pluginUtils = createPluginUtils(logger);
@@ -164,21 +161,22 @@ module.exports = async (
       renderMethod = renderMethodFromPlugins;
     }
 
-    const statusCode: number = getStatusCode(store, currentRoute);
+    // const statusCode: number = getStatusCode(store, currentRoute);
+    const statusCode: number = 200;
 
     const outputBeforeHooks: RenderOutput = render(
       { config, logger },
       req,
       {
-        EntryPoint: requirements.Component,
+        AppEntryPoint: requirements.Component,
         entryName: requirements.name,
         store,
-        routes: requirements.routes,
+        routes,
         httpClient,
       },
-      { renderProps: renderPropsAfterHooks, currentRoute },
+      { renderProps: {}/* renderPropsAfterHooks */, currentRoute: route },
       {
-        EntryWrapper,
+        Body,
         BodyWrapper,
         entriesPlugins,
         entryWrapperConfig: options.entryWrapperConfig,

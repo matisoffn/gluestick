@@ -26,7 +26,7 @@ const entries = require('project-entries').default;
 // $FlowIgnore
 const entriesConfig = require('project-entries-config');
 // $FlowIgnore
-const EntryWrapper = require('entry-wrapper').default;
+const Body = require('Body').default;
 // $FlowIgnore
 const projectHooks = require('gluestick-hooks').default;
 const BodyWrapper = require('./components/Body').default;
@@ -95,11 +95,10 @@ module.exports = ({ config, logger }: Context) => {
 
   app.use((req: Request, res: Response, next: Function) => {
     // Use SSR middleware only for entries/app routes
-    if (
-      !Object.keys(entries).find((key: string): boolean =>
-        req.url.startsWith(key),
-      )
-    ) {
+    const keyMatch = /^(\/[^/]*)\/?/.exec(req.url);
+    const isAppUrl =
+      keyMatch && Object.keys(entries).find(key => key === keyMatch[1]);
+    if (!isAppUrl) {
       next();
       return;
     }
@@ -124,7 +123,7 @@ module.exports = ({ config, logger }: Context) => {
           req,
           res,
           { entries, entriesConfig, entriesPlugins: runtimePlugins },
-          { EntryWrapper, BodyWrapper },
+          { Body, BodyWrapper },
           { assets, loadjsConfig: applicationConfig.loadjs || {} },
           {
             reduxMiddlewares,

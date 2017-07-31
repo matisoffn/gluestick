@@ -1,4 +1,4 @@
-export Root from './containers/Root';
+export AppBodyRoot from './containers/AppBodyRoot';
 export BodyAttributes from './components/BodyAttributes';
 export createStore from './lib/createStore';
 export prepareRoutesWithTransitionHooks from './lib/prepareRoutesWithTransitionHooks';
