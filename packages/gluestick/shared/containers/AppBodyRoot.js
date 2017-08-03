@@ -9,31 +9,21 @@ import { Provider } from 'react-redux';
 
 // import prepareRoutesWithTransitionHooks from '../lib/prepareRoutesWithTransitionHooks';
 
-type DefaultProps = {
-  routerHistory: ?Object,
-};
-
 type Props = {
-  /* eslint-disable */
-  routes: Object;
-  routerHistory: any;
-  routerContext: Object;
-  store: Object;
-  /* eslint-enable */
+  // httpClient: PropTypes.object.isRequired
+  routes: Object,
+  store: Object,
 };
 
 type State = {
   mounted: boolean,
 };
 
-export default class AppBodyRoot extends Component<DefaultProps, Props, State> {
+export default class AppBodyRoot extends Component<void, Props, State> {
   static propTypes = {
-    /* eslint-disable */
-    routes: PropTypes.object,
-    routerHistory: PropTypes.any,
-    routerContext: PropTypes.object,
-    store: PropTypes.object,
-    /* eslint-enable */
+    // httpClient: PropTypes.object.isRequired,
+    routes: PropTypes.object.isRequired,
+    store: PropTypes.object.isRequired,
   };
 
   state: State;
@@ -58,10 +48,11 @@ export default class AppBodyRoot extends Component<DefaultProps, Props, State> {
     const { routes, store /* , httpClient */ } = this.props;
     const Router = typeof window === 'undefined' ? StaticRouter : BrowserRouter;
 
+    // @TODO: scrolling
     return (
       <Provider store={store}>
         <Router>
-          {renderRoutes(routes)}
+          {renderRoutes(wrapRouteComponents(routes))}
         </Router>
       </Provider>
     );
@@ -100,4 +91,33 @@ export default class AppBodyRoot extends Component<DefaultProps, Props, State> {
   //   }),
   // );
   // }
+}
+
+export function withRoutes(RouteComponent: *) {
+  const RouteComponentWrapper = ({ route, children, ...rest }: *) =>
+    <RouteComponent {...rest}>
+      {children}
+      {renderRoutes(route.routes)}
+    </RouteComponent>;
+  RouteComponentWrapper.displayName = `${RouteComponent.displayName ||
+    RouteComponent.name ||
+    'Unknown'}WithRoutes`;
+  return RouteComponentWrapper;
+}
+
+export function wrapRouteComponents(routes: *) {
+  return Array.isArray(routes)
+    ? routes.map(route => {
+        return route.component
+          ? {
+              ...route,
+              component: withRoutes(route.component),
+              routes: wrapRouteComponents(route.routes),
+            }
+          : {
+              ...route,
+              routes: wrapRouteComponents(route.routes),
+            };
+      })
+    : routes;
 }
