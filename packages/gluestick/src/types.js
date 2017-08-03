@@ -181,7 +181,7 @@ export type EntriesConfig = {
   },
 };
 
-export type RenderRequirements = {
+export type AppConfig = {
   Component: Function,
   routes: Function,
   reducers: Object,

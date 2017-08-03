@@ -132,7 +132,7 @@ module.exports = ({ config, logger }: Context) => {
             httpClient: applicationConfig.httpClient || {},
             entryWrapperConfig: {},
           },
-          { hooks, hooksHelper: hooksHelper.call },
+          { hooks },
           serverPlugins,
           cachingConfig,
         );

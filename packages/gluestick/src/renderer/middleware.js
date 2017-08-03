@@ -6,7 +6,7 @@ import type {
   Response,
   Entries,
   EntriesConfig,
-  RenderRequirements,
+  AppConfig,
   RenderOutput,
   CacheManager,
   GSHooks,
@@ -18,13 +18,14 @@ import type {
 const render = require('./render');
 const getAppConfig = require('./helpers/getAppConfig');
 const matchRoute = require('./helpers/matchRoute');
-const { getHttpClient, createStore, runBeforeRoutes } = require('../../shared');
+const { getHttpClient, createStore, runOnEnter } = require('../../shared');
 const { showHelpText, MISSING_404_TEXT } = require('./helpers/helpText');
 const setHeaders = require('./response/setHeaders');
 const errorHandler = require('./helpers/errorHandler');
 const getCacheManager = require('./helpers/cacheManager');
 const getStatusCode = require('./response/getStatusCode');
 const createPluginUtils = require('../plugins/utils');
+const composeWithHooks = require('./utils/composeWithHooks');
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -44,8 +45,8 @@ type EntriesArgs = {
 
 module.exports = async (
   { config, logger }: Context,
-  req: Request,
-  res: Response,
+  request: Request,
+  response: Response,
   { entries, entriesConfig, entriesPlugins }: EntriesArgs,
   { Body, BodyWrapper }: { Body: Object, BodyWrapper: Object },
   { assets, loadjsConfig }: { assets: Object, loadjsConfig: Object },
@@ -56,7 +57,7 @@ module.exports = async (
     reduxMiddlewares: [],
     thunkMiddleware: null,
   },
-  { hooks, hooksHelper }: { hooks: GSHooks, hooksHelper: Function },
+  { hooks }: { hooks: GSHooks },
   serverPlugins: ?(ServerPlugin[]),
   cachingConfig: ?ComponentsCachingConfig,
 ) => {
@@ -67,65 +68,79 @@ module.exports = async (
   try {
     // If we have cached item then render it.
     cacheManager.enableComponentCaching(cachingConfig);
-    const cachedBeforeHooks: string | null = cacheManager.getCachedIfProd(req);
-    if (cachedBeforeHooks) {
-      const cached = hooksHelper(hooks.preRenderFromCache, cachedBeforeHooks);
-      res.send(cached);
-      return Promise.resolve();
+    const cachedResponse: string | null = composeWithHooks(
+      cacheManager.getCachedIfProd(request),
+      hooks.preRenderFromCache,
+    );
+    if (cachedResponse) {
+      response.send(cachedResponse);
+      return;
     }
 
-    const requirementsBeforeHooks: RenderRequirements = getAppConfig(
-      { config, logger },
-      req,
-      entries,
-    );
-    const requirements = hooksHelper(
+    const appConfig: AppConfig = composeWithHooks(
+      getAppConfig({ config, logger }, request, entries),
       hooks.postRenderRequirements,
-      requirementsBeforeHooks,
     );
 
+    // @TODO: refactor, apps config should be in js file and as an array
     const httpClientOptions =
-      requirements.config && requirements.config.httpClient
-        ? requirements.config.httpClient
+      appConfig.config && appConfig.config.httpClient
+        ? appConfig.config.httpClient
         : options.httpClient;
-    const httpClient: Function = getHttpClient(httpClientOptions, req, res);
+    const httpClient: Function = getHttpClient(
+      httpClientOptions,
+      request,
+      response,
+    );
 
+    // @TODO: refactor, redux options should be in app config
     // Allow to specify different redux config
     const reduxOptions =
-      requirements.config && requirements.config.reduxOptions
-        ? requirements.config.reduxOptions
+      appConfig.config && appConfig.config.reduxOptions
+        ? appConfig.config.reduxOptions
         : {
             middlewares: options.reduxMiddlewares,
             thunk: options.thunkMiddleware,
           };
 
+    // @TODO: refactor?
     const store: Object = createStore(
       httpClient,
-      () => requirements.reducers,
+      () => appConfig.reducers,
       reduxOptions.middlewares,
       cb =>
         module.hot &&
         // $FlowFixMe
-        module.hot.accept(entriesConfig[requirements.key].reducers, cb),
+        module.hot.accept(entriesConfig[appConfig.key].reducers, cb),
       // $FlowFixMe
       !!module.hot,
       reduxOptions.thunk,
     );
-    const routes = requirements.routes(store, httpClient);
-    const { route, match }: { route: Object, match: Object } = await matchRoute(
-      { config, logger },
-      req,
-      routes,
-      store,
-      httpClient,
-    );
+
+    const routes = appConfig.routes(store, httpClient);
+
+    let route;
+    let branch;
+    try {
+      const results = await matchRoute({ config, logger }, request, routes);
+      route = results.route;
+      branch = results.branch;
+    } catch (error) {
+      // @TODO: refactor
+      // This is only hit if there is no 404 handler in the react routes. A
+      // not found handler is included by default in new projects.
+      showHelpText(MISSING_404_TEXT, logger);
+      response.sendStatus(404);
+      return;
+    }
+
     // const renderPropsAfterHooks: Object = hooksHelper(
     //   hooks.postRenderProps,
     //   renderProps,
     // );
     // if (redirectLocation) {
     //   hooksHelper(hooks.preRedirect, redirectLocation);
-    //   res.redirect(
+    //   response.redirect(
     //     301,
     //     `${redirectLocation.pathname}${redirectLocation.search}`,
     //   );
@@ -136,23 +151,16 @@ module.exports = async (
     //   // This is only hit if there is no 404 handler in the react routes. A
     //   // not found handler is included by default in new projects.
     //   showHelpText(MISSING_404_TEXT, logger);
-    //   res.sendStatus(404);
+    //   response.sendStatus(404);
     //   return Promise.resolve();
     // }
 
-    // await runBeforeRoutes(store, renderPropsAfterHooks, {
-    //   isServer: true,
-    //   request: req,
-    // });
+    await runOnEnter(store, branch, request);
 
-    // const currentRouteBeforeHooks: Object =
-    //   renderPropsAfterHooks.routes[renderPropsAfterHooks.routes.length - 1];
-    // const currentRoute: Object = hooksHelper(
-    //   hooks.postGetCurrentRoute,
-    //   currentRouteBeforeHooks,
-    // );
-    // setHeaders(res, currentRoute);
+    route = composeWithHooks(route, hooks.postGetCurrentRoute);
+    setHeaders(response, route);
 
+    // @TODO: refactor
     let renderMethod: RenderMethod;
     const pluginUtils = createPluginUtils(logger);
     const renderMethodFromPlugins =
@@ -161,40 +169,37 @@ module.exports = async (
       renderMethod = renderMethodFromPlugins;
     }
 
-    // const statusCode: number = getStatusCode(store, currentRoute);
-    const statusCode: number = 200;
+    const statusCode: number = getStatusCode(store, route);
 
-    const outputBeforeHooks: RenderOutput = render(
-      { config, logger },
-      req,
-      {
-        AppEntryPoint: requirements.Component,
-        entryName: requirements.name,
-        store,
-        routes,
-        httpClient,
-      },
-      { renderProps: {}/* renderPropsAfterHooks */, currentRoute: route },
-      {
-        Body,
-        BodyWrapper,
-        entriesPlugins,
-        entryWrapperConfig: options.entryWrapperConfig,
-        envVariables: options.envVariables,
-      },
-      { assets, loadjsConfig, cacheManager },
-      { renderMethod },
-    );
-    const output: RenderOutput = hooksHelper(
+    const output: RenderOutput = composeWithHooks(
+      render(
+        { config, logger },
+        request,
+        {
+          AppEntryPoint: appConfig.Component,
+          entryName: appConfig.name,
+          store,
+          routes,
+          httpClient,
+        },
+        { renderProps: {} /* renderPropsAfterHooks */, currentRoute: route },
+        {
+          Body,
+          BodyWrapper,
+          entriesPlugins,
+          entryWrapperConfig: options.entryWrapperConfig,
+          envVariables: options.envVariables,
+        },
+        { assets, loadjsConfig, cacheManager },
+        { renderMethod },
+      ),
       hooks.postRender,
-      outputBeforeHooks,
     );
-    res.status(statusCode).send(output.responseString);
-    return Promise.resolve();
+    response.status(statusCode).send(output.responseString);
+    return;
   } catch (error) {
-    hooksHelper(hooks.error, error);
+    composeWithHooks(error, hooks.error);
     logger.error(error instanceof Error ? error.stack : error);
-    errorHandler({ config, logger }, req, res, error);
+    errorHandler({ config, logger }, request, response, error);
   }
-  return Promise.resolve();
 };

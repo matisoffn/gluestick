@@ -1,7 +1,7 @@
 /* @flow */
 
 import React, { Component, PropTypes } from 'react';
-import { createTransitionHook } from '../lib/route-helper';
+import { createTransitionHook } from '../lib/routeEvents';
 
 type Props = {
   children: any,

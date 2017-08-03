@@ -18,14 +18,14 @@ const getRenderer = (
 };
 
 type EntryRequirements = {
-  EntryPoint: Object,
+  AppEntryPoint: Object,
   entryName: string,
   store: Object,
   routes: Function,
   httpClient: Object,
 };
 type WrappersRequirements = {
-  EntryWrapper: Object,
+  Body: Object,
   BodyWrapper: Object,
   entryWrapperConfig: Object,
   envVariables: any[],
