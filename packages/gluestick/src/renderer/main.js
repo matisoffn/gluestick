@@ -29,7 +29,7 @@ const entriesConfig = require('project-entries-config');
 const Body = require('Body').default;
 // $FlowIgnore
 const projectHooks = require('gluestick-hooks').default;
-const BodyWrapper = require('./components/Body').default;
+const BodyWrapper = require('./components/BodyWrapper').default;
 const reduxMiddlewares = require('redux-middlewares').default;
 // $FlowIgnore
 const thunkMiddleware = require('redux-middlewares').thunkMiddleware;
