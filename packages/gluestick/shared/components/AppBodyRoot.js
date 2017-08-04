@@ -1,17 +1,16 @@
 /* @flow */
 
 import React, { Component, PropTypes } from 'react';
-import { StaticRouter } from 'react-router';
-import { BrowserRouter } from 'react-router-dom';
-import { renderRoutes } from 'react-router-config';
+import { StaticRouter, Router as OriginalRouter } from 'react-router';
+import { renderRoutes, matchRoutes } from 'react-router-config';
 import { Provider } from 'react-redux';
+import createBrowserHistory from 'history/createBrowserHistory';
+import { createLocation } from 'history/LocationUtils';
 // import { useScroll } from 'react-router-scroll';
-
-// import prepareRoutesWithTransitionHooks from '../lib/prepareRoutesWithTransitionHooks';
 
 type Props = {
   // httpClient: PropTypes.object.isRequired
-  routes: Object,
+  routes: any[],
   store: Object,
 };
 
@@ -22,7 +21,7 @@ type State = {
 export default class AppBodyRoot extends Component<void, Props, State> {
   static propTypes = {
     // httpClient: PropTypes.object.isRequired,
-    routes: PropTypes.object.isRequired,
+    routes: PropTypes.array.isRequired,
     store: PropTypes.object.isRequired,
   };
 
@@ -34,24 +33,50 @@ export default class AppBodyRoot extends Component<void, Props, State> {
     this.state = {
       mounted: false,
     };
+
+    this.Router = StaticRouter;
+    this.routerProps = {};
+    if (typeof window !== 'undefined') {
+      this.Router = OriginalRouter;
+      this.routerProps.history = createHistoryWithAsyncHooks();
+    }
   }
 
   componentWillMount() {
     this.setState({ mounted: true });
+    const { routes, store } = this.props;
+    if (typeof window !== 'undefined' && this.routerProps.history) {
+      this.routerProps.history.onTransition(async location => {
+        const branch = matchRoutes(routes, location.pathname);
+        if (!branch.length) {
+          throw new Error('todo');
+        }
+
+        const { route, match } = branch[branch.length - 1];
+
+        const onEnter = route.component
+          ? route.component.onEnter
+          : match.params.onEnter;
+
+        await onEnter(store, match, location);
+      });
+    }
   }
 
   componentWillUnmount() {
     this.setState({ mounted: false });
+    if (this.routerProps.history) {
+      this.routerProps.history.removeAllListeners();
+    }
   }
 
   render() {
-    const { routes, store /* , httpClient */ } = this.props;
-    const Router = typeof window === 'undefined' ? StaticRouter : BrowserRouter;
+    const { Router, routerProps, props: { routes, store } } = this;
 
     // @TODO: scrolling
     return (
       <Provider store={store}>
-        <Router>
+        <Router {...routerProps}>
           {renderRoutes(wrapRouteComponents(routes))}
         </Router>
       </Provider>
@@ -91,6 +116,45 @@ export default class AppBodyRoot extends Component<void, Props, State> {
   //   }),
   // );
   // }
+}
+
+export function createHistoryWithAsyncHooks() {
+  const createKey = () => Math.random().toString(36).substr(2, 6);
+
+  const history = createBrowserHistory();
+  const push = history.push.bind(history);
+  const replace = history.replace.bind(history);
+
+  let listeners = [];
+
+  const callListeners = async (...args) => {
+    await Promise.all(listeners.map(listener => listener(...args)));
+  };
+
+  history.removeAllListeners = () => {
+    listeners = [];
+  };
+
+  history.onTransition = listener => {
+    listeners.push(listener);
+    return () => {
+      listeners = listeners.filter(item => item !== listener);
+    };
+  };
+
+  history.push = async (...args) => {
+    const location = createLocation(...args, createKey(), history.location);
+    await callListeners(location);
+    push(...args);
+  };
+
+  history.replace = async (...args) => {
+    const location = createLocation(...args, createKey(), history.location);
+    await callListeners(location);
+    replace(...args);
+  };
+
+  return history;
 }
 
 export function withRoutes(RouteComponent: *) {

@@ -93,11 +93,12 @@ module.exports = ({ config, logger }: Context) => {
     });
   }
 
-  app.use((req: Request, res: Response, next: Function) => {
+  app.use(async (req: Request, res: Response, next: Function) => {
     // Use SSR middleware only for entries/app routes
     const keyMatch = /^(\/[^/]*)\/?/.exec(req.url);
     const isAppUrl =
-      keyMatch && Object.keys(entries).find(key => key === keyMatch[1]);
+      entries['/'] ||
+      (keyMatch && Object.keys(entries).find(key => key === keyMatch[1]));
     if (!isAppUrl) {
       next();
       return;
@@ -114,33 +115,33 @@ module.exports = ({ config, logger }: Context) => {
       });
     }
 
-    readAssets(
-      `${config.GSConfig.buildAssetsPath}/${config.GSConfig.webpackChunks}`,
-    )
-      .then((assets: Object): Promise<void> => {
-        return middleware(
-          { config, logger },
-          req,
-          res,
-          { entries, entriesConfig, entriesPlugins: runtimePlugins },
-          { Body, BodyWrapper },
-          { assets, loadjsConfig: applicationConfig.loadjs || {} },
-          {
-            reduxMiddlewares,
-            thunkMiddleware,
-            envVariables,
-            httpClient: applicationConfig.httpClient || {},
-            entryWrapperConfig: {},
-          },
-          { hooks },
-          serverPlugins,
-          cachingConfig,
-        );
-      })
-      .catch((error: Error) => {
-        logger.error(error);
-        res.sendStatus(500);
-      });
+    try {
+      const assets: Object = await readAssets(
+        `${config.GSConfig.buildAssetsPath}/${config.GSConfig.webpackChunks}`,
+      );
+
+      middleware(
+        { config, logger },
+        req,
+        res,
+        { entries, entriesConfig, entriesPlugins: runtimePlugins },
+        { Body, BodyWrapper },
+        { assets, loadjsConfig: applicationConfig.loadjs || {} },
+        {
+          reduxMiddlewares,
+          thunkMiddleware,
+          envVariables,
+          httpClient: applicationConfig.httpClient || {},
+          entryWrapperConfig: {},
+        },
+        { hooks },
+        serverPlugins,
+        cachingConfig,
+      );
+    } catch (error) {
+      logger.error(error);
+      res.sendStatus(500);
+    }
   });
 
   // Call express App Hook which accept app as param.
