@@ -191,15 +191,17 @@ export type AppConfig = {
 };
 
 export type RenderOutput = {
-  routerContext?: {
-    action: string,
-    location: {
-      pathname: string,
-      search: string,
-      hash: string,
-    },
-    url: string,
-  },
+  routerContext:
+    | {
+        action: string,
+        location: {
+          pathname: string,
+          search: string,
+          hash: string,
+        },
+        url: string,
+      }
+    | {},
   responseString: string,
   rootElement: Object,
 };

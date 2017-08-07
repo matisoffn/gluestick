@@ -177,26 +177,34 @@ module.exports = async (
         request,
         {
           AppEntryPoint: appConfig.Component,
-          entryName: appConfig.name,
+          appName: appConfig.name,
           store,
           routes,
           httpClient,
+          currentRoute: route,
         },
-        { renderProps: {} /* renderPropsAfterHooks */, currentRoute: route },
         {
           Body,
           BodyWrapper,
           entriesPlugins,
-          entryWrapperConfig: options.entryWrapperConfig,
+          bodyConfig: options.entryWrapperConfig,
           envVariables: options.envVariables,
         },
-        { assets, loadjsConfig, cacheManager },
-        { renderMethod },
+        { assets, loadjsConfig },
+        { renderMethod, cacheManager },
       ),
       hooks.postRender,
     );
-    response.status(statusCode).send(output.responseString);
-    return;
+
+    if (output.routerContext && output.routerContext.url) {
+      response.redirect(
+        /^3/.test(statusCode.toString()) ? statusCode : 301,
+        // $FlowIgnore
+        output.routerContext.url,
+      );
+    } else {
+      response.status(statusCode).send(output.responseString);
+    }
   } catch (error) {
     composeWithHooks(error, hooks.error);
     logger.error(error instanceof Error ? error.stack : error);

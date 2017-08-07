@@ -5,6 +5,7 @@ const React = require('react');
 const Oy = require('oy-vey').default;
 const { renderToString, renderToStaticMarkup } = require('react-dom/server');
 const linkAssets = require('./helpers/linkAssets');
+const getRequestDataFactory = require('./utils/getRequestDataFactory');
 
 const getRenderer = (
   isEmail: boolean,
@@ -65,32 +66,28 @@ module.exports = (
     loadjsConfig,
   );
   const isEmail = !!currentRoute.email;
-  // const routerContext = <RouterContext {...renderProps} />;
+
+  // @TODO: uncomment this
   // const rootWrappers = entriesPlugins
   //   .filter(plugin => plugin.meta.wrapper)
   //   .map(({ plugin }) => plugin);
 
+  // Render `Body` component from project, which also renders `AppBodyRoot` inside.
   const routerContext = {};
   const renderResults: Object = getRenderer(isEmail, renderMethod)(
     <Body
       config={bodyConfig}
       store={store}
       routes={routes}
-      serverProps={{ location: request.url, context: routerContext }}
       httpClient={httpClient}
-      rootWrappersOptions={{
-        userAgent: request.headers['user-agent'],
-      }}
+      serverProps={{ location: request.url, context: routerContext }}
+      getRequestData={getRequestDataFactory(request)}
     />,
     styleTags,
   );
 
-  // Grab the html from the project which is stored in the root
-  // folder named Index.js. Pass the body and the head to that
-  // component. `head` includes stuff that we want the server to
-  // always add inside the <head> tag.
-  //
-  // Bundle it all up into a string, add the doctype and deliver
+  // Inject rendered body and head elemens into documents template from
+  // the project.
   const rootElement = (
     <AppEntryPoint
       body={
