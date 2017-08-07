@@ -12,7 +12,9 @@ export async function runOnEnter(
     branch
       .map(({ route, match }) => {
         return {
-          onEnter: route.component.onEnter || match.params.onEnter,
+          onEnter: route.component
+            ? route.component.onEnter
+            : match.params.onEnter,
           match,
         };
       })

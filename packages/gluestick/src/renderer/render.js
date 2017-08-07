@@ -2,7 +2,6 @@
 import type { Context, Request, RenderOutput, RenderMethod } from '../types';
 
 const React = require('react');
-const { RouterContext } = require('react-router');
 const Oy = require('oy-vey').default;
 const { renderToString, renderToStaticMarkup } = require('react-dom/server');
 const linkAssets = require('./helpers/linkAssets');
@@ -17,38 +16,51 @@ const getRenderer = (
   return isEmail ? renderToStaticMarkup : renderToString;
 };
 
-type EntryRequirements = {
+type AppParams = {
   AppEntryPoint: Object,
-  entryName: string,
+  appName: string,
   store: Object,
   routes: Function,
   httpClient: Object,
+  currentRoute: Object,
 };
-type WrappersRequirements = {
+
+type BodyParams = {
   Body: Object,
   BodyWrapper: Object,
-  entryWrapperConfig: Object,
+  bodyConfig: Object,
   envVariables: any[],
   entriesPlugins: { plugin: Function, meta: Object }[],
 };
-type AssetsCacheOpts = {
+
+type AssetsParams = {
   assets: Object,
   loadjsConfig: Object,
+};
+
+type MiscParams = {
+  renderMethod?: RenderMethod,
   cacheManager: Object,
 };
 
 module.exports = (
   context: Context,
-  req: Request,
-  { AppEntryPoint, entryName, store, routes, httpClient }: EntryRequirements,
-  { currentRoute }: { renderProps: Object, currentRoute: Object },
-  { Body, BodyWrapper, entryWrapperConfig, envVariables }: WrappersRequirements,
-  { assets, loadjsConfig, cacheManager }: AssetsCacheOpts,
-  { renderMethod }: { renderMethod?: RenderMethod } = {},
+  request: Request,
+  {
+    AppEntryPoint,
+    appName,
+    store,
+    routes,
+    httpClient,
+    currentRoute,
+  }: AppParams,
+  { Body, BodyWrapper, bodyConfig, envVariables }: BodyParams,
+  { assets, loadjsConfig }: AssetsParams,
+  { renderMethod, cacheManager }: MiscParams = {},
 ): RenderOutput => {
   const { styleTags, scriptTags } = linkAssets(
     context,
-    entryName,
+    appName,
     assets,
     loadjsConfig,
   );
@@ -58,15 +70,16 @@ module.exports = (
   //   .filter(plugin => plugin.meta.wrapper)
   //   .map(({ plugin }) => plugin);
 
+  const routerContext = {};
   const renderResults: Object = getRenderer(isEmail, renderMethod)(
     <Body
-      config={entryWrapperConfig}
+      config={bodyConfig}
       store={store}
       routes={routes}
-      location={req.url}
+      serverProps={{ location: request.url, context: routerContext }}
       httpClient={httpClient}
       rootWrappersOptions={{
-        userAgent: req.headers['user-agent'],
+        userAgent: request.headers['user-agent'],
       }}
     />,
     styleTags,
@@ -90,7 +103,7 @@ module.exports = (
         />
       }
       head={isEmail ? null : renderResults.head || styleTags}
-      req={req}
+      request={request}
     />
   );
 
@@ -106,9 +119,11 @@ module.exports = (
     responseString = `${docType}${renderToStaticMarkup(rootElement)}`;
   }
   if (currentRoute.cache) {
-    cacheManager.setCacheIfProd(req, responseString, currentRoute.cacheTTL);
+    cacheManager.setCacheIfProd(request, responseString, currentRoute.cacheTTL);
   }
+
   return {
+    routerContext,
     responseString,
     rootElement, // only for testing
   };

@@ -71,11 +71,11 @@ export default class AppBodyRoot extends Component<void, Props, State> {
   }
 
   render() {
-    const { Router, routerProps, props: { routes, store, location } } = this;
+    const { Router, routerProps, props: { routes, store, serverProps } } = this;
 
-    if (location) {
-      routerProps.location = location;
-      routerProps.context = {};
+    if (serverProps) {
+      routerProps.location = serverProps.location;
+      routerProps.context = serverProps.context;
     }
 
     // @TODO: scrolling
