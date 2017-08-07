@@ -63,6 +63,7 @@ module.exports = (
       config={entryWrapperConfig}
       store={store}
       routes={routes}
+      location={req.url}
       httpClient={httpClient}
       rootWrappersOptions={{
         userAgent: req.headers['user-agent'],
