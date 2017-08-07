@@ -1,32 +1,41 @@
 /* @flow */
 
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
 import { StaticRouter, Router as OriginalRouter } from 'react-router';
-import { renderRoutes, matchRoutes } from 'react-router-config';
+import { matchRoutes, renderRoutes } from 'react-router-config';
 import { Provider } from 'react-redux';
-import createBrowserHistory from 'history/createBrowserHistory';
-import { createLocation } from 'history/LocationUtils';
+import createHistoryWithAsyncHooks from '../lib/createHistoryWithAsyncHooks';
+import wrapRouteComponents from '../lib/wrapRouteComponents';
 // import { useScroll } from 'react-router-scroll';
 
 type Props = {
-  // httpClient: PropTypes.object.isRequired
+  // httpClient: Object
   routes: any[],
   store: Object,
+  // eslint-disable-next-line react/no-unused-prop-types
+  serverProps?: { location: string, context: {} },
 };
 
 type State = {
   mounted: boolean,
 };
 
-export default class AppBodyRoot extends Component<void, Props, State> {
-  static propTypes = {
-    // httpClient: PropTypes.object.isRequired,
-    routes: PropTypes.array.isRequired,
-    store: PropTypes.object.isRequired,
-  };
+type History = {
+  push: Function,
+  replace: Function,
+  onTransition: (listener: (location: Object) => Promise<void>) => () => void,
+  removeAllListeners: () => void,
+};
 
+export default class AppBodyRoot extends Component<void, Props, State> {
   state: State;
   props: Props;
+  Router: React.Component<*, *, *>;
+  routerProps: {
+    history?: History,
+    location?: string,
+    context?: {},
+  };
 
   constructor(props: Props) {
     super(props);
@@ -45,10 +54,12 @@ export default class AppBodyRoot extends Component<void, Props, State> {
   componentWillMount() {
     this.setState({ mounted: true });
     const { routes, store } = this.props;
+
     if (typeof window !== 'undefined' && this.routerProps.history) {
       this.routerProps.history.onTransition(async location => {
         const branch = matchRoutes(routes, location.pathname);
         if (!branch.length) {
+          // @TODO: provide sensible error
           throw new Error('todo');
         }
 
@@ -81,6 +92,7 @@ export default class AppBodyRoot extends Component<void, Props, State> {
     // @TODO: scrolling
     return (
       <Provider store={store}>
+        {/* $FlowIgnore */}
         <Router {...routerProps}>
           {renderRoutes(wrapRouteComponents(routes))}
         </Router>
@@ -123,70 +135,3 @@ export default class AppBodyRoot extends Component<void, Props, State> {
   // }
 }
 
-export function createHistoryWithAsyncHooks() {
-  const createKey = () => Math.random().toString(36).substr(2, 6);
-
-  const history = createBrowserHistory();
-  const push = history.push.bind(history);
-  const replace = history.replace.bind(history);
-
-  let listeners = [];
-
-  const callListeners = async (...args) => {
-    await Promise.all(listeners.map(listener => listener(...args)));
-  };
-
-  history.removeAllListeners = () => {
-    listeners = [];
-  };
-
-  history.onTransition = listener => {
-    listeners.push(listener);
-    return () => {
-      listeners = listeners.filter(item => item !== listener);
-    };
-  };
-
-  history.push = async (...args) => {
-    const location = createLocation(...args, createKey(), history.location);
-    await callListeners(location);
-    push(...args);
-  };
-
-  history.replace = async (...args) => {
-    const location = createLocation(...args, createKey(), history.location);
-    await callListeners(location);
-    replace(...args);
-  };
-
-  return history;
-}
-
-export function withRoutes(RouteComponent: *) {
-  const RouteComponentWrapper = ({ route, children, ...rest }: *) =>
-    <RouteComponent {...rest}>
-      {children}
-      {renderRoutes(route.routes)}
-    </RouteComponent>;
-  RouteComponentWrapper.displayName = `${RouteComponent.displayName ||
-    RouteComponent.name ||
-    'Unknown'}WithRoutes`;
-  return RouteComponentWrapper;
-}
-
-export function wrapRouteComponents(routes: *) {
-  return Array.isArray(routes)
-    ? routes.map(route => {
-        return route.component
-          ? {
-              ...route,
-              component: withRoutes(route.component),
-              routes: wrapRouteComponents(route.routes),
-            }
-          : {
-              ...route,
-              routes: wrapRouteComponents(route.routes),
-            };
-      })
-    : routes;
-}
