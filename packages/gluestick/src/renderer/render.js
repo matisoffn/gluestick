@@ -3,19 +3,10 @@ import type { Context, Request, RenderOutput, RenderMethod } from '../types';
 
 const React = require('react');
 const Oy = require('oy-vey').default;
-const { renderToString, renderToStaticMarkup } = require('react-dom/server');
+const { renderToStaticMarkup } = require('react-dom/server');
 const linkAssets = require('./helpers/linkAssets');
 const getRequestDataFactory = require('./utils/getRequestDataFactory');
-
-const getRenderer = (
-  isEmail: boolean,
-  renderMethod?: RenderMethod,
-): Function => {
-  if (renderMethod) {
-    return renderMethod;
-  }
-  return isEmail ? renderToStaticMarkup : renderToString;
-};
+const getRenderer = require('./utils/getRenderer');
 
 type AppParams = {
   AppEntryPoint: Object,
