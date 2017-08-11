@@ -3,11 +3,9 @@
 /**
  * @TODO: docs
  */
-export async function runOnEnter(
-  store: Object,
-  branch: Object,
-  request: ?Object,
-) {
+async function runOnEnter(branch: Object, request: ?Object) {
+  console.log(branch);
+
   await Promise.all(
     branch
       .map(({ route, match }) => {
@@ -19,6 +17,10 @@ export async function runOnEnter(
         };
       })
       .filter(({ onEnter }) => onEnter)
-      .map(({ onEnter, match }) => onEnter(store, match, request)),
+      .map(({ onEnter, match }) => onEnter(match, request)),
   );
 }
+
+module.exports = {
+  runOnEnter,
+};

@@ -1,10 +1,10 @@
 /* @flow */
 
 import React, { Component } from 'react';
-import { StaticRouter, Router as OriginalRouter } from 'react-router';
-import { matchRoutes, renderRoutes } from 'react-router-config';
+import { StaticRouter } from 'react-router';
+import { BrowserRouter } from 'react-router-dom';
+import { renderRoutes } from 'react-router-config';
 import { Provider } from 'react-redux';
-import createHistoryWithAsyncHooks from '../lib/createHistoryWithAsyncHooks';
 import wrapRouteComponents from '../lib/wrapRouteComponents';
 // import { useScroll } from 'react-router-scroll';
 
@@ -20,19 +20,11 @@ type State = {
   mounted: boolean,
 };
 
-type History = {
-  push: Function,
-  replace: Function,
-  onTransition: (listener: (location: Object) => Promise<void>) => () => void,
-  removeAllListeners: () => void,
-};
-
 export default class AppBodyRoot extends Component<void, Props, State> {
   state: State;
   props: Props;
   Router: React.Component<*, *, *>;
   routerProps: {
-    history?: History,
     location?: string,
     context?: {},
   };
@@ -46,39 +38,16 @@ export default class AppBodyRoot extends Component<void, Props, State> {
     this.Router = StaticRouter;
     this.routerProps = {};
     if (typeof window !== 'undefined') {
-      this.Router = OriginalRouter;
-      this.routerProps.history = createHistoryWithAsyncHooks();
+      this.Router = BrowserRouter;
     }
   }
 
   componentWillMount() {
     this.setState({ mounted: true });
-    const { routes, store } = this.props;
-
-    if (typeof window !== 'undefined' && this.routerProps.history) {
-      this.routerProps.history.onTransition(async location => {
-        const branch = matchRoutes(routes, location.pathname);
-        if (!branch.length) {
-          // @TODO: provide sensible error
-          throw new Error('todo');
-        }
-
-        const { route, match } = branch[branch.length - 1];
-
-        const onEnter = route.component
-          ? route.component.onEnter
-          : match.params.onEnter;
-
-        await onEnter(store, match, location);
-      });
-    }
   }
 
   componentWillUnmount() {
     this.setState({ mounted: false });
-    if (this.routerProps.history) {
-      this.routerProps.history.removeAllListeners();
-    }
   }
 
   render() {
@@ -134,4 +103,3 @@ export default class AppBodyRoot extends Component<void, Props, State> {
   // );
   // }
 }
-

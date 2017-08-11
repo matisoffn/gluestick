@@ -18,7 +18,8 @@ import type {
 const render = require('./render');
 const getAppConfig = require('./helpers/getAppConfig');
 const matchRoute = require('./helpers/matchRoute');
-const { getHttpClient, createStore, runOnEnter } = require('../../shared');
+const { getHttpClient, createStore } = require('../../shared');
+const { runOnEnter } = require('./utils/routeEvents');
 const { showHelpText, MISSING_404_TEXT } = require('./helpers/helpText');
 const setHeaders = require('./response/setHeaders');
 const errorHandler = require('./helpers/errorHandler');
@@ -155,7 +156,7 @@ module.exports = async (
     //   return Promise.resolve();
     // }
 
-    await runOnEnter(store, branch, request);
+    await runOnEnter(branch, request);
 
     route = composeWithHooks(route, hooks.postGetCurrentRoute);
     setHeaders(response, route);
