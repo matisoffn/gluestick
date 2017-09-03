@@ -212,4 +212,4 @@ commander.command('*', null, { noHelp: true }).action(cmd => {
   commander.help();
 });
 
-commander.parse(process.argv);
+exports.default = commander;
