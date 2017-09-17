@@ -212,4 +212,4 @@ commander.command('*', null, { noHelp: true }).action(cmd => {
   commander.help();
 });
 
-exports.default = commander;
+module.exports = commander;
